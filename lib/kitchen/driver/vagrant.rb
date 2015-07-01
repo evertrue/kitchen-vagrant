@@ -106,8 +106,9 @@ module Kitchen
 
         provider = config[:provider]
         provider = "vmware" if config[:provider] =~ /^vmware_(.+)$/
-
-        if %w[virtualbox vmware].include?(provider)
+        if ENV["BENTO_BOX_URL"]
+          ENV["BENTO_BOX_URL"].gsub('#{provider}', provider).gsub('#{instance.platform.name}', instance.platform.name)
+        elsif %w[virtualbox vmware].include?(provider)
           "https://opscode-vm-bento.s3.amazonaws.com/vagrant/#{provider}/" \
             "opscode_#{instance.platform.name}_chef-provisionerless.box"
         end
@@ -194,7 +195,11 @@ module Kitchen
       #   box
       # @api private
       def bento_box?(name)
-        name =~ /^(centos|debian|fedora|freebsd|opensuse|ubuntu)-/
+        if ENV['BENTO_BOX_PREFIXES']
+          name =~ /^(#{ENV['BENTO_BOX_PREFIXES']})-/
+        else
+          name =~ /^(centos|debian|fedora|freebsd|opensuse|ubuntu)-/
+        end
       end
 
       # Renders and writes out a Vagrantfile dedicated to this instance.
